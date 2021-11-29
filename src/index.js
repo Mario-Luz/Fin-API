@@ -63,6 +63,18 @@ app.get("/statement", verifyIfExistsAccountCPF, (req, res) => {
   return res.json(customer.statement);
 });
 
+app.get("/statement/date", verifyIfExistsAccountCPF, (req, res) => {
+  const { customer } = req;
+  const { date } = req.query;
+  const dateFormat = new Date(date + "00:00");
+  const statement = customer.statement.filter(
+    (statement) =>
+      statement.created_at.toDateString() ===
+      new Date(dateFormat).toDateString()
+  );
+  return res.json(statement);
+});
+
 app.post("/deposit", verifyIfExistsAccountCPF, (req, res) => {
   const { description, amount } = req.body;
   const { customer } = req;
@@ -83,15 +95,41 @@ app.post("/whitdraw", verifyIfExistsAccountCPF, (req, res) => {
   const balance = getBalance(customer.statement);
 
   if (balance < amount) {
-    return res.status(400).json({ error: "Insufficient funds" });
+    return res.status(400).json({
+      error: "Insufficient funds",
+    });
   }
   const statementOperation = {
     amount,
     created_at: new Date(),
     type: "credit",
   };
-   customer.statement.push(statementOperation);
-   return res.status(201).send();
+  customer.statement.push(statementOperation);
+  return res.status(201).send();
+});
+
+app.put("/account", verifyIfExistsAccountCPF, (req, res) => {
+  const { name } = req.body;
+  const { customer } = req;
+  customer.name = name;
+  return res.status(201).send();
+});
+
+app.get("/account", verifyIfExistsAccountCPF, (req, res) => {
+  const { customer } = req;
+  return res.json(customer);
+});
+
+app.delete("/account", verifyIfExistsAccountCPF, (req, res) => {
+  const { custumers } = req;
+  custumers.splice(custumer, 1);
+  return res.status(200).json(custumers);
+});
+
+app.get("/balance", verifyIfExistsAccountCPF, (req, res) => {
+  const { customer } = req;
+  const balance = getBalance(custumer.statement);
+  return res.json(balance);
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
